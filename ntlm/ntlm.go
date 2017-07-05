@@ -24,8 +24,8 @@ func DoNTLMRequest(httpClient *http.Client, request *http.Request) (*http.Respon
 		return nil, err
 	}
 
-	//If the status is 401 then we need to re-authenticate, otherwise it was successful
-	if res.StatusCode == 401 {
+	//If the status is 407 then we need to re-authenticate, otherwise it was successful
+	if res.StatusCode == 407 {
 
 		auth, authOk := getDefaultCredentialsAuth()
 		if authOk {
@@ -67,7 +67,7 @@ func DoNTLMRequest(httpClient *http.Client, request *http.Request) (*http.Respon
 func sendNegotiateRequest(httpClient *http.Client, request *http.Request, negotiateMessageBytes []byte) ([]byte, error) {
 	negotiateMsg := base64.StdEncoding.EncodeToString(negotiateMessageBytes)
 
-	request.Header.Add("Authorization", "NTLM "+negotiateMsg)
+	request.Header.Add("Proxy-Authorization", "NTLM "+negotiateMsg)
 	res, err := httpClient.Do(request)
 
 	if res == nil && err != nil {
@@ -87,12 +87,12 @@ func sendNegotiateRequest(httpClient *http.Client, request *http.Request, negoti
 
 func sendChallengeRequest(httpClient *http.Client, request *http.Request, challengeBytes []byte) (*http.Response, error) {
 	authMsg := base64.StdEncoding.EncodeToString(challengeBytes)
-	request.Header.Add("Authorization", "NTLM "+authMsg)
+	request.Header.Add("Proxy-Authorization", "NTLM "+authMsg)
 	return httpClient.Do(request)
 }
 
 func parseChallengeResponse(response *http.Response) ([]byte, error) {
-	header := response.Header.Get("Www-Authenticate")
+	header := response.Header.Get("Proxy-Authenticate")
 	if len(header) < 6 {
 		return nil, fmt.Errorf("Invalid NTLM challenge response: %q", header)
 	}
