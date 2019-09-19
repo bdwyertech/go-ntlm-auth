@@ -138,21 +138,21 @@ type SSPIAuth struct {
 
 var (
 	initialized = false
-	sec_fn *SecurityFunctionTable
+	sec_fn      *SecurityFunctionTable
 )
 
 func initialize() {
-	
-	secur32dll            := syscall.NewLazyDLL("secur32.dll")
+
+	secur32dll := syscall.NewLazyDLL("secur32.dll")
 	initSecurityInterface := secur32dll.NewProc("InitSecurityInterfaceW")
-		
+
 	ptr, _, _ := initSecurityInterface.Call()
 	sec_fn = (*SecurityFunctionTable)(unsafe.Pointer(ptr))
-	
+
 	initialized = true
 }
 
-func getDefaultCredentialsAuth() (NtlmAuthenticator, bool) {
+func GetDefaultCredentialsAuth() (NtlmAuthenticator, bool) {
 	return getAuth("", "", "", "")
 }
 
@@ -160,7 +160,7 @@ func getAuth(user, password, service, workstation string) (NtlmAuthenticator, bo
 	if !initialized {
 		initialize()
 	}
-	
+
 	if user == "" {
 		return &SSPIAuth{Service: service}, true
 	}
